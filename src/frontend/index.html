@@ -157,41 +157,51 @@
 			}
 
 			function drag(element) {
-				var x = 0, y = 0, x1 = 0, y1 = 0;
+				let x0 = 0; y0 = 0;
 
 				element.onmousedown = dragMouseDown
-				element.touchstart = dragMouseDown
+				element.ontouchstart = dragMouseDown
 
 				function dragMouseDown(e) {
-					raise(element);
-					e = e || window.event;
 					e.preventDefault();
-					x1 = e.clientX;
-					y1 = e.clientY;
+					e = e || window.event;
+					x0 = element.clientX;
+					y0 = element.clientY;
+					raise(element);
 					document.onmouseup = closeDragElement;
-					document.onmousemove = elementDrag;
-					document.touchmove = elementDrag;
-					document.touchcancel = closeDragElement;
-					document.touchend = closeDragElement;
+					document.onmousemove = mousedrag;
+					document.ontouchmove = touchdrag;
+					document.ontouchcancel = closeDragElement;
+					document.ontouchend = closeDragElement;
+					document.ontouchforcechange = closeDragElement;
 				}
 
-				function elementDrag(e) {
-					e = e || window.event;
+				function moveto(x, y) {
+					const finalX = x0 - x;
+					const finalY = y0 - y;
+					x0 = x;
+					y0 = y;
+					element.style.left = (element.offsetLeft - finalX) + "px";
+					element.style.top = (element.offsetTop - finalY) + "px";
+				}
+
+				function touchdrag(e) {
+					touch = e.changedTouches[0];
+					moveto(touch.clientX, touch.clientY);
+				}
+
+				function mousedrag(e) {
 					e.preventDefault();
-					x = x1 - e.clientX;
-					y = y1 - e.clientY;
-					x1 = e.clientX;
-					y1 = e.clientY;
-					element.style.top = (element.offsetTop - y) + "px";
-					element.style.left = (element.offsetLeft - x) + "px";
+					moveto(e.clientX, e.clientY);
 				}
 
 				function closeDragElement() {
 					document.onmouseup = null;
 					document.onmousemove = null;
-					document.touchmove = null;
-					document.touchcancel = null;
-					document.touchend = null;
+					document.ontouchmove = null;
+					document.ontouchcancel = null;
+					document.ontouchend = null;
+					document.ontouchforcechange = null;
 				}
 			}
 
