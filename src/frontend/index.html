@@ -17,7 +17,7 @@
 			}
 			[textdisplay] {
 				font-family: sans-serif;
-				word-break: break-all;
+				word-break: break-word;
 			}
 			[bigtext] {
 				font-size: 24px;
@@ -144,7 +144,8 @@
 				}
 				let dragpos = getDragPosition();
 				post(message, dragpos[0], dragpos[1], (res) => {
-					addNote(res);
+					let newnote = addNote(res);
+					raise(newnote);
 					raise(preview);
 				})
 			}
