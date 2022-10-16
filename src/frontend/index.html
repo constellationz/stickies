@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+		<style>
+			#input {
+				outline: none;
+				background: white;
+			}
+			#button {
+				outline: none;
+				background: lightgray;
+			}
+			[drag] {
+				cursor: move;
+				position: absolute;
+			}
+			[textdisplay] {
+				font-family: sans-serif;
+				word-break: break-all;
+			}
+			[bigtext] {
+				font-size: 24px;
+			}
+			[dotted] {
+				outline: none;
+				border: 4px dotted;
+			}
+			[note] {
+				width: auto;
+				height: auto;
+				max-width: 200px;
+				border-radius: 10px;
+				position: absolute;
+				padding-left: 25px;
+				padding-right: 25px;
+				padding-top: 15px;
+				padding-bottom: 15px;
+				display: flex;
+				filter: drop-shadow(0 0 3px #00000055); 
+			}
+		</style>
+	</head>
+	<body id="bg" style="resize: flex">
+		<div id="boxes" notebg=1></div>
+		<input type="text" textdisplay=1 bigtext=1 dotted=1 id="input" 
+			style="padding: 20" placeholder="Say something"></input>
+		<input type="button" textdisplay=1 bigtext=1 dotted=1 
+			id="submit" value="Post my note"></input>
+		<note style="backdrop-filter: blur(8px); background: #FFFFFF88; top: 150px; left: 150px"
+			note=1 textdisplay=1 dotted=1 id="preview" drag=1>
+			Say something
+		</note>
+		<script>
+			const colors = [
+				["#FF7EB9", "white"],
+				["#FF65A3", "white"],
+				["#7AFCFF", "black"],
+				["#FEFF9C", "black"],
+				["#FFF740", "black"],
+			];
+
+			const canvasx = 1000;
+			const canvasy = 1000;
+			const maxmessagelen = 300;
+			const url = "http://localhost:8080";
+			const textinput = document.getElementById("input");
+			const preview = document.getElementById("preview");
+			const button = document.getElementById("submit");
+			const starty = textinput.getBoundingClientRect().bottom;
+			const defaulttext = textinput.placeholder;
+			const numboxes = 10;
+			let biggestz = 1;
+
+			textinput.addEventListener("keyup", function(event) {
+				event.preventDefault();
+				if (event.keyCode === 13) {
+					submit();
+					return false;
+				}
+			})
+			button.addEventListener("click", function(e) {
+				event.preventDefault();
+				submit();
+			})
+
+			initTextInput();
+			textinput.addEventListener('input', handleinput);
+			textinput.addEventListener('propertychange', handleinput);
+			handleinput(textinput);
+			drag(preview);
+
+			// load notes
+			jQuery.get(url + '/getposts/', (posts) => {
+				console.log('got posts');
+				for (let i = 0; i < posts.length; i++) {
+					const note = addNote(posts[i]);
+					raise(preview);
+				}
+			})
+
+			// post a message
+			function post(message, x, y, callback) {
+				fetch(url + '/post/', {
+					method: "POST",
+					headers: {'Content-Type': 'application/json'}, 
+					body: JSON.stringify({
+						x: x,
+						y: y,
+						message: message,
+					})
+				})
+				.then(res => res.json())
+				.then(data => callback(data))
+			}
+
+			function initTextInput() {
+				textinput.value = "";
+			}
+
+			function getDragPosition() {
+				const rect = preview.getBoundingClientRect();
+				const x = rect.left;
+				const y = rect.top;
+				return [x, y];
+			}
+
+			function getTextInput() {
+				return textinput.value;
+			}
+
+			function submit() {
+				// Make sure the message is valid
+				let message = getTextInput();
+				if (message.length < 1) {
+					alert("Can't post an empty message");
+					return;
+				}
+				if (message.length > maxmessagelen) {
+					alert(`Can't post a message of length ${maxmessagelen} or more`);
+					return;
+				}
+				let dragpos = getDragPosition();
+				post(message, dragpos[0], dragpos[1], (res) => {
+					addNote(res);
+					raise(preview);
+				})
+			}
+
+			// Whenever the user enters input update the preview box
+			function handleinput(e) {
+				raise(preview);
+				text = getTextInput() === "" ? defaulttext : textinput.value;
+				preview.innerHTML = text;
+			}
+
+			function drag(element) {
+				var x = 0, y = 0, x1 = 0, y1 = 0;
+
+				element.onmousedown = dragMouseDown
+
+				function dragMouseDown(e) {
+					raise(element);
+					e = e || window.event;
+					e.preventDefault();
+					x1 = e.clientX;
+					y1 = e.clientY;
+					document.onmouseup = closeDragElement;
+					document.onmousemove = elementDrag;
+				}
+
+				function elementDrag(e) {
+					e = e || window.event;
+					e.preventDefault();
+					x = x1 - e.clientX;
+					y = y1 - e.clientY;
+					x1 = e.clientX;
+					y1 = e.clientY;
+					element.style.top = (element.offsetTop - y) + "px";
+					element.style.left = (element.offsetLeft - x) + "px";
+				}
+
+				function closeDragElement() {
+					document.onmouseup = null;
+					document.onmousemove = null;
+				}
+			}
+
+			function raise(element) {
+				biggestz++;
+				element.style["z-index"] = biggestz;
+			}
+
+			function randInt(lower, upper) {
+				let min = Math.ceil(lower);
+				let max = Math.floor(upper);
+				return Math.floor(Math.random() * (max - min + 1)) + min;
+			}
+
+			function addNote(note) {
+				console.log("Adding note", note);
+
+				// Here are the values
+				const message = note.message;
+				const x = note.x;
+				const y = note.y;
+				const hash = note.hash
+				const zindex = note.zindex;
+				const colorindex = note.colorindex;
+
+				// Get colors
+				const mod = colorindex % colors.length;
+				const background = colors[mod][0];
+				const color = colors[mod][1];
+
+				// Make sticky
+				const box = document.createElement("note");
+				box.id = "note" + hash;
+				box.style.top = Math.max(starty, y) + 'px';
+				box.style.left = x + 'px';
+				box.style["z-index"] = zindex;
+				box.style.color = color;
+				box.style.background = background;
+				box.setAttribute("hash", hash);
+				box.setAttribute("drag", 1);
+				box.setAttribute("note", 1);
+				box.setAttribute("textDisplay", 1);
+
+				// Add the text
+				const textnode = document.createTextNode(message);
+				box.appendChild(textnode);
+
+				// Put in boxes
+				const boxes = document.getElementById("boxes");
+				boxes.appendChild(box);
+
+				// This box can be dragged
+				drag(box);
+
+				return box;
+			}
+		</script>
+	</body>
+</html>
