@@ -5,18 +5,19 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const crypto = require('crypto');
 const express = require('express');
+const favicon = require('serve-favicon');
 const fs = require('fs');
 const path = require('path');
+
+// make sure we can decode posts
+const jsonParser = bodyParser.json();
+const urlParser = bodyParser.urlencoded({ extended: false });
 
 // start express
 const app = express();
 
 // use cors
 app.use(cors());
-
-// make sure we can decode posts
-const jsonParser = bodyParser.json();
-const urlParser = bodyParser.urlencoded({ extended: false });
 
 // Notes are stored in a global hash map
 let numposts = 0;
@@ -41,6 +42,9 @@ function getPosts(req, res) {
 app.get('/getposts/', jsonParser, getPosts);
 app.get('/getposts/', urlParser, getPosts);
 
+// Use favicon
+app.use(favicon(path.join(__dirname, '../frontend/favicon.ico')));
+
 // Show the client hello world on the website
 app.get('/', (req, res) => {
 	res.sendFile(path.join(__dirname, '../frontend/index.html'));
@@ -51,7 +55,27 @@ app.listen(port, () => {
 	console.log(`Example app listening on port ${port}`);
 });
 
-// Respondto post request
+// Respond to move posts 
+function move(req, res) {
+	console.log("Moved note", req.body);
+
+	// get request body
+	const hash = req.body.hash;
+	const x = req.body.x;
+	const y = req.body.y;
+
+	// Let users move the note if the hash exists
+	if (allposts[hash]) {
+		const note = allposts[hash];
+		note.x = x;
+		note.y = y;
+	}
+
+}
+app.post('/move', jsonParser, move);
+app.post('/move', urlParser, move);
+
+// Respond to message posts
 function post(req, res) {
 	console.log("got request for", req.body);
 

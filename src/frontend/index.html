@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<link rel="icon" href="favicon.ico?v=1.1">
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 		<style>
 			#input {
@@ -74,6 +75,9 @@
 			const numboxes = 10;
 			let biggestz = 1;
 
+			// Set the title!!
+			document.title = 'notary';
+
 			textinput.addEventListener("keyup", function(event) {
 				event.preventDefault();
 				if (event.keyCode === 13) {
@@ -87,6 +91,7 @@
 			})
 
 			initTextInput();
+			moveRandomly(preview);
 			textinput.addEventListener('input', handleinput);
 			textinput.addEventListener('propertychange', handleinput);
 			handleinput(textinput);
@@ -97,9 +102,24 @@
 				console.log('got posts');
 				for (let i = 0; i < posts.length; i++) {
 					const note = addNote(posts[i]);
+					drag(note, postmove)
 					raise(preview);
 				}
 			})
+
+			// post a move
+			function postmove(note, x, y) {
+				let hash = note.getAttribute('hash');
+				fetch(url + '/move/', {
+					method: "POST",
+					headers: {'Content-Type': 'application/json'}, 
+					body: JSON.stringify({
+						x: x,
+						y: y,
+						hash: hash,
+					})
+				})
+			}
 
 			// post a message
 			function post(message, x, y, callback) {
@@ -118,6 +138,15 @@
 
 			function initTextInput() {
 				textinput.value = "";
+			}
+
+			function random(bottom, range) {
+				return Math.floor(Math.random() * range + bottom);
+			}
+
+			function moveRandomly(note) {
+				note.style.top = random(starty + 50, 100) + 'px';
+				note.style.left = random(50, 100) + 'px';
 			}
 
 			function getDragPosition() {
@@ -145,6 +174,7 @@
 				let dragpos = getDragPosition();
 				post(message, dragpos[0], dragpos[1], (res) => {
 					let newnote = addNote(res);
+					drag(newnote, postmove);
 					raise(newnote);
 					raise(preview);
 				})
@@ -157,7 +187,7 @@
 				preview.innerHTML = text;
 			}
 
-			function drag(element) {
+			function drag(element, endcallback) {
 				let x0 = 0; y0 = 0;
 
 				element.onmousedown = dragMouseDown
@@ -203,6 +233,9 @@
 					document.ontouchcancel = null;
 					document.ontouchend = null;
 					document.ontouchforcechange = null;
+					if (endcallback) {
+						endcallback(element, element.offsetLeft, element.offsetTop);
+					}
 				}
 			}
 
@@ -253,9 +286,6 @@
 				// Put in boxes
 				const boxes = document.getElementById("boxes");
 				boxes.appendChild(box);
-
-				// This box can be dragged
-				drag(box);
 
 				return box;
 			}
