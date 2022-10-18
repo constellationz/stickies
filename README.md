@@ -6,6 +6,6 @@ A website where anybody can add sticky notes
 
 ```bash
 npm install
-npm run serve
+npm run serve --port=8000
 ```
 Connect to localhost:8080

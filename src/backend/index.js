@@ -2,9 +2,14 @@
 // Backend for notary
 
 // Port for the web app
-const PORT = 80;
+const PORT = process.env.npm_config_port;
+if (PORT === undefined) {
+	console.log("The server requires a port to be hosted on. Pass the command-line argument --port=8000 to host on port 8000.");
+	return -1;
+}
 
 const bodyParser = require("body-parser");
+const { assert } = require("console");
 const cors = require("cors");
 const crypto = require('crypto');
 const express = require('express');
