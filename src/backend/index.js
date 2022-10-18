@@ -37,7 +37,6 @@ function getPosts(req, res) {
 	let postlist = [];
 	for (const posthash in allposts) 
 		postlist.push(allposts[posthash])
-	console.log("returning list", postlist);
 	res.json(postlist);
 }
 app.get('/getposts/', jsonParser, getPosts);
@@ -45,7 +44,7 @@ app.get('/getposts/', urlParser, getPosts);
 
 // Respond to move posts 
 function move(req, res) {
-	console.log("Moved note", req.body);
+	console.log("moved note", req.body);
 
 	// Get request values
 	const hash = req.body.hash;
