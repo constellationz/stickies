@@ -1,47 +1,10 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<link rel="icon" href="favicon.ico?v=1.1">
+		<title>notary</title>
+		<link rel="icon" href="/static/favicon.ico">
+		<link rel="stylesheet" href="/static/css/style.css">
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-		<style>
-			#input {
-				outline: none;
-				background: white;
-			}
-			#button {
-				outline: none;
-				background: lightgray;
-			}
-			[drag] {
-				cursor: move;
-				position: absolute;
-			}
-			[textdisplay] {
-				font-family: sans-serif;
-				word-break: break-word;
-			}
-			[bigtext] {
-				font-size: 24px;
-			}
-			[dotted] {
-				outline: none;
-				border: 4px dotted;
-			}
-			[note] {
-				width: auto;
-				height: auto;
-				max-width: 200px;
-				border-radius: 10px;
-				position: absolute;
-				padding-left: 25px;
-				padding-right: 25px;
-				padding-top: 15px;
-				padding-bottom: 15px;
-				touch-action: none;
-				display: flex;
-				filter: drop-shadow(0 0 3px #00000055); 
-			}
-		</style>
 	</head>
 	<body id="bg" style="resize: flex">
 		<div id="boxes" notebg=1></div>
@@ -65,8 +28,7 @@
 
 			const canvasx = 1000;
 			const canvasy = 1000;
-			const maxmessagelen = 300;
-			const url = "http://localhost:8080";
+			const maxmessagelen = 3000;
 			const textinput = document.getElementById("input");
 			const preview = document.getElementById("preview");
 			const button = document.getElementById("submit");
@@ -74,6 +36,7 @@
 			const defaulttext = textinput.placeholder;
 			const numboxes = 10;
 			let biggestz = 1;
+			let sendingmessage = false;
 
 			// Set the title!!
 			document.title = 'notary';
@@ -98,7 +61,7 @@
 			drag(preview);
 
 			// load notes
-			jQuery.get(url + '/getposts/', (posts) => {
+			jQuery.get('/getposts/', (posts) => {
 				console.log('got posts');
 				for (let i = 0; i < posts.length; i++) {
 					const note = addNote(posts[i]);
@@ -110,7 +73,7 @@
 			// post a move
 			function postmove(note, x, y) {
 				let hash = note.getAttribute('hash');
-				fetch(url + '/move/', {
+				fetch('/move/', {
 					method: "POST",
 					headers: {'Content-Type': 'application/json'}, 
 					body: JSON.stringify({
@@ -123,7 +86,7 @@
 
 			// post a message
 			function post(message, x, y, callback) {
-				fetch(url + '/post/', {
+				fetch('/post/', {
 					method: "POST",
 					headers: {'Content-Type': 'application/json'}, 
 					body: JSON.stringify({
@@ -177,6 +140,10 @@
 					drag(newnote, postmove);
 					raise(newnote);
 					raise(preview);
+					const rect = newnote.getBoundingClientRect();
+					preview.style.top = rect.top + newnote.clientHeight + 'px';
+					preview.style.left = rect.left;
+					initTextInput();
 				})
 			}
 

@@ -1,35 +1,36 @@
+// index.js
+// Backend for notary
+
 // Port for the web app
-const port = 8080;
+const PORT = 80;
 
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const crypto = require('crypto');
 const express = require('express');
-const favicon = require('serve-favicon');
-const fs = require('fs');
 const path = require('path');
 
-// make sure we can decode posts
+// For decoding posts of various types
 const jsonParser = bodyParser.json();
 const urlParser = bodyParser.urlencoded({ extended: false });
 
-// start express
-const app = express();
-
-// use cors
-app.use(cors());
-
-// Notes are stored in a global hash map
+// Notes are stored in a hash map
 let numposts = 0;
 let allposts = {};
 
-// Get an unused hash
-function getNewHash() {
-	var id = '0';
-	while (allposts[id] != null)
-		id = id = crypto.randomBytes(20).toString('hex');
-	return id;
-}
+const app = express();
+app.use(cors());
+app.use('/static', express.static(path.join(__dirname, '../public')));
+
+// Show the webpage
+app.get('/', (req, res) => {
+	res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+// Print when listening
+app.listen(PORT, () => {
+	console.log(`Example app listening on port ${PORT}`);
+});
 
 // Respond to get request
 function getPosts(req, res) {
@@ -42,24 +43,11 @@ function getPosts(req, res) {
 app.get('/getposts/', jsonParser, getPosts);
 app.get('/getposts/', urlParser, getPosts);
 
-// Use favicon
-app.use(favicon(path.join(__dirname, '../frontend/favicon.ico')));
-
-// Show the client hello world on the website
-app.get('/', (req, res) => {
-	res.sendFile(path.join(__dirname, '../frontend/index.html'));
-});
-
-// Print when listening
-app.listen(port, () => {
-	console.log(`Example app listening on port ${port}`);
-});
-
 // Respond to move posts 
 function move(req, res) {
 	console.log("Moved note", req.body);
 
-	// get request body
+	// Get request values
 	const hash = req.body.hash;
 	const x = req.body.x;
 	const y = req.body.y;
@@ -75,12 +63,19 @@ function move(req, res) {
 app.post('/move', jsonParser, move);
 app.post('/move', urlParser, move);
 
+function getNewNoteHash() {
+	var id = '0';
+	while (allposts[id] != null)
+		id = crypto.randomBytes(20).toString('hex');
+	return id;
+}
+
 // Respond to message posts
 function post(req, res) {
 	console.log("got request for", req.body);
 
-	// make our note
-	const hash = getNewHash();
+	// Make our note
+	const hash = getNewNoteHash();
 	const note = {
 		message: req.body.message,
 		x: req.body.x,
@@ -90,7 +85,7 @@ function post(req, res) {
 		hash: hash,
 	}
 
-	// insert & save
+	// Insert & save
 	numposts++;
 	allposts[hash] = note;
 	res.json(note);
