@@ -1,6 +1,6 @@
 # notary
 
-A website where anybody can add sticky notes
+A website where anybody can add sticky notes. Made in 24 hours for a hackathon.
 
 ## Setup
 
