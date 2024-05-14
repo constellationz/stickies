@@ -1,0 +1,42 @@
+#input {
+    outline: none;
+    background: white;
+}
+#button {
+    outline: none;
+    background: lightgray;
+}
+[transparent] {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: #FFFFFF88;
+}
+[drag] {
+    cursor: move;
+    position: absolute;
+}
+[textdisplay] {
+    font-family: sans-serif;
+    word-break: break-word;
+}
+[bigtext] {
+    font-size: 24px;
+}
+[dotted] {
+    outline: none;
+    border: 4px dotted;
+}
+[note] {
+    width: auto;
+    height: auto;
+    max-width: 200px;
+    border-radius: 10px;
+    position: absolute;
+    padding-left: 25px;
+    padding-right: 25px;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    touch-action: none;
+    display: flex;
+    filter: drop-shadow(0 0 3px #00000055); 
+}

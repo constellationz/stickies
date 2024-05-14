@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>notary</title>
+		<link rel="icon" href="/static/favicon.ico">
+		<link rel="stylesheet" href="/static/css/style.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+	</head>
+	<body id="bg" style="resize: flex">
+		<div notebg id="boxes"></div>
+		<input id="input" type="text" textdisplay bigtext dotted style="padding: 20" placeholder="Say something"></input>
+		<input id="submit" type="button" textdisplay bigtext dotted value="Post my note"></input>
+		<div textdisplay>Refresh to see new notes</div>
+		<div id="preview" note textdisplay dotted drag transparent>Say something</div>
+		<script src="/static/js/main.js"></script>
+	</body>
+</html>
